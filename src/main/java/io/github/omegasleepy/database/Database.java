@@ -13,7 +13,8 @@ public class Database {
             "01_schema_agents.sql",
             "02_schema_posts.sql",
             "03_schema_post_categories.sql",
-            "04_schema_comments.sql"
+            "04_schema_comments.sql",
+            "05_schema_agent_turns.sql"
     );
 
     /**
@@ -41,10 +42,10 @@ public class Database {
 
             connection.commit(); // Commit all schemas atomically
         } catch (SQLException | RuntimeException e) {
-            connection.rollback(); // Rollback if any file fails
+            connection.rollback(); // Rollback if any schema file fails
             throw e;
         } finally {
-            connection.setAutoCommit(originalAutoCommit); // Restore state
+            connection.setAutoCommit(originalAutoCommit); // Restore auto-commit state
         }
     }
 }
