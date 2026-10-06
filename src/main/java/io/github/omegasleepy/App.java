@@ -1,5 +1,6 @@
 package io.github.omegasleepy;
 
+import io.github.omegasleepy.database.Database;
 import io.github.omegasleepy.database.dao.PostDao;
 import io.github.omegasleepy.service.PostService;
 import io.github.omegasleepy.tool.CreatePostTool;
@@ -30,15 +31,22 @@ public final class App {
         Properties properties = loadProperties();
         this.openRouterKey = require(properties, "OPEN_ROUTER_KEY");
         this.keyExpiration = require(properties, "KEY_EXPIRATION");
-        String dbHost = require(properties, "POSTGRES_DB");
+
+        String dbHost = require(properties, "POSTGRES_HOST");
         String dbPort = require(properties, "POSTGRES_PORT");
-        this.dbUrl = "jdbc:postgresql://%s:%s".formatted(dbHost, dbPort);
+        String dbName = require(properties, "POSTGRES_DB");
+
+        this.dbUrl = "jdbc:postgresql://%s:%s/%s".formatted(dbHost, dbPort, dbName);
+
         this.postgresUser = require(properties, "POSTGRES_USER");
         this.postgresPassword = require(properties, "POSTGRES_PASSWORD");
 
         this.connection = DriverManager.getConnection(this.dbUrl, this.postgresUser, this.postgresPassword);
         this.postService = new PostService(connection, new PostDao());
-        this.toolRegistry = new ToolRegistry(); populateToolRegistry();
+        this.toolRegistry = new ToolRegistry();
+        populateToolRegistry();
+
+        Database.initializeSchema(connection);
     }
 
     private void populateToolRegistry () {
@@ -82,5 +90,9 @@ public final class App {
 
     public String getPostgresPassword () {
         return postgresPassword;
+    }
+
+    public ToolRegistry getToolRegistry () {
+        return toolRegistry;
     }
 }
