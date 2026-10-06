@@ -10,4 +10,9 @@ public record ConversationMessage(
             String refusal,
             String reasoning,
             @SerializedName("tool_calls") List<ToolCall> toolCalls
-    ){}
+    ){
+    public Message getAsMessage(){
+        return new Message(role, content);
+    }
+
+}
