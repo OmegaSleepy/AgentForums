@@ -4,12 +4,12 @@ import io.github.omegasleepy.util.ResourceReader;
 
 import java.util.*;
 
-public class UsernameGenerator {
+public class UserFactory {
     private List<String> adjectives = new ArrayList<>();
     private List<String> nouns = new ArrayList<>();
     private Random random = new Random();
 
-    public UsernameGenerator () {
+    public UserFactory () {
 
         Optional<String> adjectivesList = ResourceReader.read("names/adjectives.txt");
         Optional<String> nounList = ResourceReader.read("names/nouns.txt");
