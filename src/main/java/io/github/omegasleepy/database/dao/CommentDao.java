@@ -1,5 +1,7 @@
 package io.github.omegasleepy.database.dao;
 
+import io.github.omegasleepy.database.records.Comment;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;

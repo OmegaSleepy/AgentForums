@@ -1,5 +1,7 @@
 package io.github.omegasleepy.database.dao;
 
+import io.github.omegasleepy.database.records.Agent;
+
 import java.sql.*;
 import java.time.Instant;
 import java.util.ArrayList;
