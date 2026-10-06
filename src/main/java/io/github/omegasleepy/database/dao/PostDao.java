@@ -8,8 +8,8 @@ import java.util.UUID;
 
 public class PostDao {
 
-    public UUID createPost(Connection conn, UUID authorId, String content) throws SQLException {
-        String sql = "INSERT INTO posts (author_id, content) VALUES (?, ?) RETURNING id";
+    public UUID createPost(Connection conn, UUID authorId, String title, String content) throws SQLException {
+        String sql = "INSERT INTO posts (author_id, title, content) VALUES (?, ?, ?) RETURNING id";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, authorId);
             stmt.setString(2, content);
@@ -23,7 +23,7 @@ public class PostDao {
     }
 
     public Optional<Post> getPost(Connection conn, UUID id) throws SQLException {
-        String sql = "SELECT id, author_id, content, created_at, updated_at FROM posts WHERE id = ?";
+        String sql = "SELECT id, author_id, title, content, created_at, updated_at FROM posts WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -44,7 +44,7 @@ public class PostDao {
     }
 
     public List<Post> searchPosts(Connection conn, String query, int limit, int offset) throws SQLException {
-        String sql = "SELECT id, author_id, content, created_at, updated_at " +
+        String sql = "SELECT id, author_id, title, content, created_at, updated_at " +
                 "FROM posts WHERE content ILIKE ? ORDER BY created_at DESC LIMIT ? OFFSET ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, "%" + query + "%");
@@ -55,7 +55,7 @@ public class PostDao {
     }
 
     public List<Post> getRecentPosts(Connection conn, int limit, int offset) throws SQLException {
-        String sql = "SELECT id, author_id, content, created_at, updated_at " +
+        String sql = "SELECT id, author_id, title, content, created_at, updated_at " +
                 "FROM posts ORDER BY created_at DESC LIMIT ? OFFSET ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, limit);
@@ -65,7 +65,7 @@ public class PostDao {
     }
 
     public List<Post> getPostsByCategory(Connection conn, String category, int limit, int offset) throws SQLException {
-        String sql = "SELECT p.id, p.author_id, p.content, p.created_at, p.updated_at " +
+        String sql = "SELECT p.id, p.author_id, p.title p.content, p.created_at, p.updated_at " +
                 "FROM posts p " +
                 "JOIN post_categories pc ON p.id = pc.post_id " +
                 "WHERE pc.category = ?::post_category_enum " +
@@ -79,7 +79,7 @@ public class PostDao {
     }
 
     public List<Post> getPostsByAuthor(Connection conn, UUID authorId, int limit, int offset) throws SQLException {
-        String sql = "SELECT id, author_id, content, created_at, updated_at " +
+        String sql = "SELECT id, author_id, title, content, created_at, updated_at " +
                 "FROM posts WHERE author_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, authorId);
@@ -103,11 +103,12 @@ public class PostDao {
         return new Post(
                 (UUID) rs.getObject("id"),
                 (UUID) rs.getObject("author_id"),
+                rs.getString("title"),
                 rs.getString("content"),
                 rs.getTimestamp("created_at").toInstant(),
                 rs.getTimestamp("updated_at").toInstant()
         );
     }
 
-    public record Post(UUID id, UUID authorId, String content, java.time.Instant createdAt, java.time.Instant updatedAt) {}
+    public record Post(UUID id, UUID authorId, String title, String content, java.time.Instant createdAt, java.time.Instant updatedAt) {}
 }
