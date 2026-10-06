@@ -91,5 +91,4 @@ public class CommentDao {
         );
     }
 
-    public record Comment(UUID id, UUID postId, UUID authorId, UUID parentCommentId, String content, java.time.Instant createdAt) {}
 }

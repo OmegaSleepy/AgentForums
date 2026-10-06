@@ -131,15 +131,5 @@ public class AgentDao {
         );
     }
 
-    public record Agent(
-            UUID id,
-            String name,
-            String bio,
-            String personality,
-            String model,
-            String systemPrompt,
-            boolean active,
-            Instant createdAt,
-            Instant updatedAt
-    ) {}
+
 }

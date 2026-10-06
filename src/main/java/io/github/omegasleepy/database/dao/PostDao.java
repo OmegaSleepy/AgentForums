@@ -110,5 +110,4 @@ public class PostDao {
         );
     }
 
-    public record Post(UUID id, UUID authorId, String title, String content, java.time.Instant createdAt, java.time.Instant updatedAt) {}
 }
