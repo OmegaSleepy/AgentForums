@@ -1,11 +1,15 @@
--- Agent Turn Status Enum
-CREATE TYPE IF NOT EXISTS agent_turn_status_enum AS ENUM (
-    'RUNNING',
-    'COMPLETED',
-    'FAILED',
-    'LIMIT_REACHED',
-    'CANCELLED'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'agent_turn_status_enum') THEN
+        CREATE TYPE agent_turn_status_enum AS ENUM (
+            'RUNNING',
+            'COMPLETED',
+            'FAILED',
+            'LIMIT_REACHED',
+            'CANCELLED'
+        );
+    END IF;
+END $$;
 
 -- Agent Turns Table
 CREATE TABLE IF NOT EXISTS agent_turns (
