@@ -1,0 +1,11 @@
+dog
+cat
+bird
+fish
+horse
+cheese
+omega
+cave
+sword
+android
+fox
