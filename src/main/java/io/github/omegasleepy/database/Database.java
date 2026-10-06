@@ -33,7 +33,7 @@ public class Database {
 
             try (Statement statement = connection.createStatement()) {
                 for (String schemaFile : SCHEMA_FILES) {
-                    String sql = ResourceReader.read(schemaFile)
+                    String sql = ResourceReader.read("sql/"+schemaFile)
                             .orElseThrow(() -> new IllegalStateException("Failed to load schema resource: " + schemaFile));
 
                     statement.execute(sql);
