@@ -1,6 +1,6 @@
-package data;
+package io.github.omegasleepy.data;
 
-import util.ResourceReader;
+import io.github.omegasleepy.util.ResourceReader;
 
 import java.util.*;
 
