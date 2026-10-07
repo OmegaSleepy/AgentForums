@@ -4,6 +4,7 @@ import io.github.omegasleepy.database.Database;
 import io.github.omegasleepy.database.dao.AgentDao;
 import io.github.omegasleepy.database.dao.CommentDao;
 import io.github.omegasleepy.database.dao.PostDao;
+import io.github.omegasleepy.openrouter.ModelProvider;
 import io.github.omegasleepy.service.AgentService;
 import io.github.omegasleepy.service.CommentService;
 import io.github.omegasleepy.service.PostService;
@@ -25,6 +26,9 @@ public final class App {
     private final String postgresUser;
     private final String postgresPassword;
 
+    private final ModelProvider modelProvider;
+    private final String localLLMURL;
+
     public final PostService postService;
     public final CommentService commentService;
     public final AgentService agentService;
@@ -40,6 +44,10 @@ public final class App {
         String dbHost = require(properties, "POSTGRES_HOST");
         String dbPort = require(properties, "POSTGRES_PORT");
         String dbName = require(properties, "POSTGRES_DB");
+
+        modelProvider = ModelProvider.valueOf(require(properties, "MODEL_PROVIDER").toUpperCase());
+        this.localLLMURL = require(properties, "LOCAL_LLM_URL");
+
 
         this.dbUrl = "jdbc:postgresql://%s:%s/%s".formatted(dbHost, dbPort, dbName);
 
@@ -82,6 +90,14 @@ public final class App {
             throw new IllegalStateException("Missing required configuration property: " + key);
         }
         return value;
+    }
+
+    public String getLocalLLMURL () {
+        return localLLMURL;
+    }
+
+    public ModelProvider getModelProvider () {
+        return modelProvider;
     }
 
     public String getOpenRouterKey () {
