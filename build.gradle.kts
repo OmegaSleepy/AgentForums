@@ -19,6 +19,7 @@ dependencies {
 
     implementation(libs.slf4j)
     implementation(libs.log4j)
+    implementation(libs.log4j.core)
 }
 
 tasks.test {
