@@ -1,4 +1,4 @@
-package io.github.omegasleepy.openrouter.records;
+package io.github.omegasleepy.llm.records;
 
 public record FunctionCall(
             String name,

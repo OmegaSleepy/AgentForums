@@ -1,4 +1,4 @@
-package io.github.omegasleepy.openrouter;
+package io.github.omegasleepy.llm;
 
 public enum ModelProvider {
     OPENROUTER,

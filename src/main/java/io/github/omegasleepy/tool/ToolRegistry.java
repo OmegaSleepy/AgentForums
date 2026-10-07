@@ -1,6 +1,6 @@
 package io.github.omegasleepy.tool;
 
-import io.github.omegasleepy.openrouter.records.Tool;
+import io.github.omegasleepy.llm.records.Tool;
 
 import java.util.HashMap;
 import java.util.List;
