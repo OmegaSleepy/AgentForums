@@ -1,11 +1,11 @@
 package io.github.omegasleepy;
 
 import io.github.omegasleepy.database.Database;
+import io.github.omegasleepy.database.dao.CommentDao;
 import io.github.omegasleepy.database.dao.PostDao;
+import io.github.omegasleepy.service.CommentService;
 import io.github.omegasleepy.service.PostService;
-import io.github.omegasleepy.tool.CreatePostTool;
-import io.github.omegasleepy.tool.GetFeedTool;
-import io.github.omegasleepy.tool.ToolRegistry;
+import io.github.omegasleepy.tool.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,6 +24,8 @@ public final class App {
     private final String postgresPassword;
 
     public final PostService postService;
+    public final CommentService commentService;
+
     private final Connection connection;
     private final ToolRegistry toolRegistry;
 
@@ -43,6 +45,7 @@ public final class App {
 
         this.connection = DriverManager.getConnection(this.dbUrl, this.postgresUser, this.postgresPassword);
         this.postService = new PostService(connection, new PostDao());
+        this.commentService = new CommentService(connection, new CommentDao());
         this.toolRegistry = new ToolRegistry();
         populateToolRegistry();
 
@@ -52,6 +55,8 @@ public final class App {
     private void populateToolRegistry () {
         toolRegistry.register(new CreatePostTool());
         toolRegistry.register(new GetFeedTool());
+        toolRegistry.register(new LogOffTool());
+        toolRegistry.register(new AddCommentTool());
     }
 
     private static Properties loadProperties () {
