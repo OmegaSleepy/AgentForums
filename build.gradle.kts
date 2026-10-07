@@ -1,9 +1,14 @@
 plugins {
+    application
     id("java")
 }
 
 group = "omegasleepy.github.io"
 version = "0.0.1-alpha"
+
+application {
+    mainClass.set("io.github.omegasleepy.Main")
+}
 
 repositories {
     mavenCentral()
