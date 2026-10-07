@@ -43,7 +43,7 @@ public class GetFeedTool implements AgentTool {
         int page = arguments.get("page").getAsInt();
 
         try {
-            String response = gson.toJson(app.postService.getPosts(10, page));
+            String response = gson.toJson(app.postService.getPostsWithAuthors(10, page));
             if (response.length() < 10) {
                 return "There are no posts yet. Create one with create_post";
             } else  {

@@ -2,6 +2,7 @@ package io.github.omegasleepy.service;
 
 import io.github.omegasleepy.database.dao.PostDao;
 import io.github.omegasleepy.database.records.Post;
+import io.github.omegasleepy.database.records.PostForAgent;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -36,5 +37,9 @@ public class PostService {
 
     public List<Post> getPosts (int limit, int offset) throws SQLException {
         return postDao.getRecentPosts(connection, limit, offset);
+    }
+
+    public List<PostForAgent> getPostsWithAuthors (int limit, int offset) throws SQLException {
+        return postDao.getRecentPostsAndAuthors(connection, limit, offset);
     }
 }
