@@ -71,6 +71,10 @@ public final class App {
         toolRegistry.register(new GetFeedTool());
         toolRegistry.register(new LogOffTool());
         toolRegistry.register(new AddCommentTool());
+        toolRegistry.register(new GetCommentsTool());
+        toolRegistry.register(new GetRepliesTool());
+        toolRegistry.register(new ReadComments());
+        toolRegistry.register(new ReplyToCommentTool());
         toolRegistry.register(new ReadPostTool());
     }
 

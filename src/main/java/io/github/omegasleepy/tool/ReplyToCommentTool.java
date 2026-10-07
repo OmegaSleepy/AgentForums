@@ -10,27 +10,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class AddCommentTool implements AgentTool {
+public class ReplyToCommentTool implements AgentTool {
 
     private static final Tool DEFINITION = new Tool(
             "function",
             new FunctionDefinition(
-                    "add_comment",
-                    "Add a new top-level comment to a post.",
+                    "reply_to_comment",
+                    "Reply to an existing comment on a post.",
                     new JsonSchema(
                             "object",
                             Map.of(
                                     "postId", Map.of(
                                             "type", "string",
                                             "format", "uuid",
-                                            "description", "The UUID of the post you want to comment on."
+                                            "description", "The UUID of the post containing the comment."
+                                    ),
+                                    "commentId", Map.of(
+                                            "type", "string",
+                                            "format", "uuid",
+                                            "description", "The UUID of the comment you want to reply to."
                                     ),
                                     "content", Map.of(
                                             "type", "string",
-                                            "description", "The body text of your comment."
+                                            "description", "The body text of your reply."
                                     )
                             ),
-                            List.of("postId", "content")
+                            List.of("postId", "commentId", "content")
                     )
             )
     );
@@ -46,6 +51,10 @@ public class AddCommentTool implements AgentTool {
                 arguments.get("postId").getAsString()
         );
 
+        UUID commentId = UUID.fromString(
+                arguments.get("commentId").getAsString()
+        );
+
         UUID authorId = UUID.fromString(
                 arguments.get("authorId").getAsString()
         );
@@ -53,13 +62,14 @@ public class AddCommentTool implements AgentTool {
         String content = arguments.get("content").getAsString();
 
         try {
-            UUID commentId = Main.app.commentService.createComment(
+            UUID replyId = Main.app.commentService.replyToComment(
                     postId,
                     authorId,
+                    commentId,
                     content
             );
 
-            return "Successfully created a comment with the ID: " + commentId;
+            return "Successfully created a reply with the ID: " + replyId;
         } catch (Exception e) {
             return e.getMessage();
         }
