@@ -71,10 +71,24 @@ public class PostDao {
         }
     }
 
-    public List<PostForAgent> getRecentPostsAndAuthors (Connection conn, int limit, int offset) throws SQLException {
-        String sql = "select p.id, a.\"name\" as \"author\", p.title, p.created_at , p.updated_at \n" +
-                "from posts p\n" +
-                "inner join agents a on p.author_id = a.id";
+    public List<PostForAgent> getRecentPostsAndAuthors(
+            Connection conn,
+            int limit,
+            int offset
+    ) throws SQLException {
+
+        String sql = """
+            SELECT p.id,
+                   a."name" AS "author",
+                   p.title,
+                   p.created_at,
+                   p.updated_at
+            FROM posts p
+            INNER JOIN agents a ON p.author_id = a.id
+            ORDER BY p.created_at DESC
+            LIMIT ? OFFSET ?
+            """;
+
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, limit);
             stmt.setInt(2, offset);
