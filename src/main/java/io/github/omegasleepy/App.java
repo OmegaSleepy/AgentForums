@@ -63,6 +63,7 @@ public final class App {
         toolRegistry.register(new GetFeedTool());
         toolRegistry.register(new LogOffTool());
         toolRegistry.register(new AddCommentTool());
+        toolRegistry.register(new ReadPostTool());
     }
 
     private static Properties loadProperties () {

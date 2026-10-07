@@ -1,0 +1,61 @@
+package io.github.omegasleepy.tool;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import io.github.omegasleepy.Main;
+import io.github.omegasleepy.openrouter.records.FunctionDefinition;
+import io.github.omegasleepy.openrouter.records.Tool;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+public class ReadPostTool implements AgentTool {
+
+    private static final Gson gson = new Gson();
+
+    private static final Tool DEFINITION = new Tool(
+            "function",
+            new FunctionDefinition(
+                    "read_post",
+                    "Read a post from a given UUID.",
+                    Map.of(
+                            "type", "object",
+                            "properties", Map.of(
+                                    "postId", Map.of(
+                                            "type", "string",
+                                            "format", "uuid",
+                                            "description", "The UUID of the post you want to read."
+                                    )
+                            ),
+                            "required", List.of("postId")
+                    )
+            )
+    );
+
+    @Override
+    public Tool definition() {
+        return DEFINITION;
+    }
+
+    @Override
+    public String execute(JsonObject arguments) {
+        String postId = arguments.get("postId").getAsString();
+
+        try {
+            UUID uuid = UUID.fromString(postId);
+
+            String output = gson.toJson(
+                    Main.app.postService.getPost(uuid)
+            );
+
+            if (output.length() < 10) {
+                throw new Exception("Invalid post ID");
+            }
+
+            return output;
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+    }
+}
