@@ -7,6 +7,7 @@ public record Comment(
         UUID id,
         UUID postId,
         UUID authorId,
+        String author,
         UUID parentCommentId,
         String content,
         Instant createdAt

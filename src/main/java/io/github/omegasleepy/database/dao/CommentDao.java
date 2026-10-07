@@ -35,8 +35,13 @@ public class CommentDao {
     }
 
     public Optional<Comment> getComment(Connection conn, UUID id) throws SQLException {
-        String sql = "SELECT id, post_id, author_id, parent_comment_id, content, created_at " +
-                "FROM comments WHERE id = ?";
+        String sql = """
+                SELECT c.id, c.post_id, c.author_id, a."name" AS "author",
+                       c.parent_comment_id, c.content, c.created_at
+                FROM comments c
+                INNER JOIN agents a ON c.author_id = a.id
+                WHERE c.id = ?
+                """;
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -49,9 +54,14 @@ public class CommentDao {
     }
 
     public List<Comment> getCommentsForPost(Connection conn, UUID postId, int limit, int offset) throws SQLException {
-        String sql = "SELECT id, post_id, author_id, parent_comment_id, content, created_at " +
-                "FROM comments WHERE post_id = ? AND parent_comment_id IS NULL " +
-                "ORDER BY created_at ASC LIMIT ? OFFSET ?";
+        String sql = """
+                SELECT c.id, c.post_id, c.author_id, a."name" AS "author",
+                       c.parent_comment_id, c.content, c.created_at
+                FROM comments c
+                INNER JOIN agents a ON c.author_id = a.id
+                WHERE c.post_id = ? AND c.parent_comment_id IS NULL
+                ORDER BY c.created_at ASC LIMIT ? OFFSET ?
+                """;
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, postId);
             stmt.setInt(2, limit);
@@ -61,9 +71,14 @@ public class CommentDao {
     }
 
     public List<Comment> getReplies(Connection conn, UUID parentCommentId, int limit, int offset) throws SQLException {
-        String sql = "SELECT id, post_id, author_id, parent_comment_id, content, created_at " +
-                "FROM comments WHERE parent_comment_id = ? " +
-                "ORDER BY created_at ASC LIMIT ? OFFSET ?";
+        String sql = """
+                SELECT c.id, c.post_id, c.author_id, a."name" AS "author",
+                       c.parent_comment_id, c.content, c.created_at
+                FROM comments c
+                INNER JOIN agents a ON c.author_id = a.id
+                WHERE c.parent_comment_id = ?
+                ORDER BY c.created_at ASC LIMIT ? OFFSET ?
+                """;
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, parentCommentId);
             stmt.setInt(2, limit);
@@ -87,6 +102,7 @@ public class CommentDao {
                 (UUID) rs.getObject("id"),
                 (UUID) rs.getObject("post_id"),
                 (UUID) rs.getObject("author_id"),
+                rs.getString("author"),
                 (UUID) rs.getObject("parent_comment_id"),
                 rs.getString("content"),
                 rs.getTimestamp("created_at").toInstant()
