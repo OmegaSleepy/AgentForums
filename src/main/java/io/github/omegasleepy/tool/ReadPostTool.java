@@ -46,15 +46,10 @@ public class ReadPostTool implements AgentTool {
         try {
             UUID uuid = UUID.fromString(postId);
 
-            String output = gson.toJson(
-                    Main.app.postService.getPost(uuid)
-            );
+            var post = Main.app.postService.getPost(uuid);
 
-            if (output.length() < 10) {
-                throw new Exception("Invalid post ID");
-            }
+            return post.map(gson::toJson).orElse("Invalid post ID");
 
-            return output;
         } catch (Exception e) {
             return e.getMessage();
         }
