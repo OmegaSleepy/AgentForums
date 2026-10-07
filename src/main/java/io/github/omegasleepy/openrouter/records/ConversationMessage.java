@@ -12,7 +12,7 @@ public record ConversationMessage(
             @SerializedName("tool_calls") List<ToolCall> toolCalls
     ){
     public Message getAsMessage(){
-        return new Message(role, content);
+        return new Message(role, content, null, toolCalls);
     }
 
 }
