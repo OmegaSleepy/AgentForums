@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import io.github.omegasleepy.database.records.Agent;
 import io.github.omegasleepy.llm.records.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -17,16 +19,15 @@ import static io.github.omegasleepy.Main.app;
 
 public final class LLMClient {
 
+    private static final Logger logger = LoggerFactory.getLogger(LLMClient.class);
+
     private static final HttpClient CLIENT = HttpClient.newHttpClient();
     private static final Gson GSON = new Gson();
 
-    private LLMClient() {}
+    private LLMClient () {
+    }
 
-    public static void run(
-            String apiKey,
-            Agent agent,
-            List<Tool> tools
-    ) throws IOException, InterruptedException {
+    public static void run (String apiKey, Agent agent, List<Tool> tools) throws IOException, InterruptedException {
 
         ChatRequest initialRequest = createRequest(agent, tools);
         List<Message> messages = new ArrayList<>(initialRequest.messages());
@@ -45,23 +46,17 @@ public final class LLMClient {
 
             if (response.statusCode() / 100 != 2) {
                 throw new IOException(
-                        "LLM server returned HTTP "
-                                + response.statusCode()
-                                + ": "
-                                + response.body()
+                        "LLM server returned HTTP " + response.statusCode() + ": " + response.body()
                 );
             }
 
-            AgentResponse agentResponse =
-                    GSON.fromJson(response.body(), AgentResponse.class);
+            AgentResponse agentResponse = GSON.fromJson(response.body(), AgentResponse.class);
 
-            if (agentResponse.choices() == null
-                    || agentResponse.choices().isEmpty()) {
+            if (agentResponse.choices() == null || agentResponse.choices().isEmpty()) {
                 throw new IOException("LLM returned no choices.");
             }
 
-            ConversationMessage assistantMessage =
-                    agentResponse.choices().getFirst().message();
+            ConversationMessage assistantMessage = agentResponse.choices().getFirst().message();
 
             if (assistantMessage == null) {
                 throw new IOException("LLM returned a null message.");
@@ -72,20 +67,13 @@ public final class LLMClient {
             messages.add(assistantMessage.getAsMessage());
 
             if (toolCalls == null || toolCalls.isEmpty()) {
-                System.out.printf(
-                        "[%s] Agent finished: %s%n",
-                        agent.name(),
-                        assistantMessage.content()
-                );
+                logger.info("[{}] Agent finished: {}", agent.name(), assistantMessage.content());
                 return;
             }
 
             for (ToolCall toolCall : toolCalls) {
                 if (toolCall.function() == null) {
-                    System.err.printf(
-                            "[%s] Received tool call without function.%n",
-                            agent.name()
-                    );
+                    logger.warn("[{}] Received tool call without function.", agent.name());
                     continue;
                 }
 
@@ -96,15 +84,9 @@ public final class LLMClient {
                 if (tool == null) {
                     String result = "Unknown tool: " + toolName;
 
-                    System.err.printf(
-                            "[%s] %s%n",
-                            agent.name(),
-                            result
-                    );
+                    logger.warn("[{}] {}", agent.name(), result);
 
-                    messages.add(
-                            new Message("tool", result, toolCall.id())
-                    );
+                    messages.add(new Message("tool", result, toolCall.id()));
 
                     continue;
                 }
@@ -112,34 +94,21 @@ public final class LLMClient {
                 JsonObject arguments;
 
                 try {
-                    arguments = GSON.fromJson(
-                            toolCall.function().arguments(),
-                            JsonObject.class
-                    );
+                    arguments = GSON.fromJson(toolCall.function().arguments(), JsonObject.class);
                 } catch (Exception e) {
-                    String result = "Invalid tool arguments: "
-                            + e.getMessage();
+                    String result = "Invalid tool arguments: " + e.getMessage();
 
-                    System.err.printf(
-                            "[%s] %s%n",
-                            agent.name(),
-                            result
-                    );
+                    logger.warn("[{}] {}", agent.name(), result, e);
 
-                    messages.add(
-                            new Message("tool", result, toolCall.id())
-                    );
+                    messages.add(new Message("tool", result, toolCall.id()));
 
                     continue;
                 }
 
-                arguments.addProperty(
-                        "authorId",
-                        agent.id().toString()
-                );
+                arguments.addProperty("authorId", agent.id().toString());
 
-                System.out.printf(
-                        "[%s] Calling %s: %s%n",
+                logger.info(
+                        "[{}] Calling {}: {}",
                         agent.name(),
                         toolName,
                         arguments
@@ -152,44 +121,34 @@ public final class LLMClient {
                 } catch (Exception e) {
                     result = "Tool execution failed: " + e.getMessage();
 
-                    System.err.printf(
-                            "[%s] Tool %s failed: %s%n",
+                    logger.error(
+                            "[{}] Tool {} failed: {}",
                             agent.name(),
                             toolName,
-                            e.getMessage()
+                            e.getMessage(),
+                            e
                     );
                 }
 
-                System.out.printf(
-                        "[%s] Result: %s%n",
+                logger.info(
+                        "[{}] Result: {}",
                         agent.name(),
                         result
                 );
 
-                messages.add(
-                        new Message("tool", result, toolCall.id())
-                );
+                messages.add(new Message("tool", result, toolCall.id()));
 
                 if (toolName.equals("log_off")) {
-                    System.out.printf(
-                            "[%s] Logged off.%n",
-                            agent.name()
-                    );
+                    logger.info("[{}] Logged off.", agent.name());
                     return;
                 }
             }
         }
 
-        System.out.printf(
-                "[%s] Reached maximum iterations.%n",
-                agent.name()
-        );
+        logger.warn("[{}] Reached maximum iterations.", agent.name());
     }
 
-    private static ChatRequest createRequest(
-            Agent agent,
-            List<Tool> tools
-    ) {
+    private static ChatRequest createRequest (Agent agent, List<Tool> tools) {
         return new ChatRequest(
                 agent.model(),
                 List.of(
@@ -203,8 +162,7 @@ public final class LLMClient {
                         ),
                         new Message(
                                 "user",
-                                "You are now active on the forum. "
-                                        + "Decide what you want to do."
+                                "You are now active on the forum. Decide what you want to do."
                         )
                 ),
                 new Reasoning(false),
@@ -213,38 +171,27 @@ public final class LLMClient {
         );
     }
 
-    private static HttpResponse<String> fetch(
+    private static HttpResponse<String> fetch (
             String apiKey,
             ChatRequest request
     ) throws IOException, InterruptedException {
 
-        URI uri = URI.create(
-                switch (app.getModelProvider()) {
-                    case OPENROUTER ->
-                            "https://openrouter.ai/api/v1/chat/completions";
+        URI uri = URI.create(switch (app.getModelProvider()) {
+            case OPENROUTER -> "https://openrouter.ai/api/v1/chat/completions";
 
-                    case LOCAL ->
-                            app.getLocalLLMURL();
-                }
-        );
+            case LOCAL -> app.getLocalLLMURL();
+        });
 
         HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(uri)
                 .header("Content-Type", "application/json");
 
         if (app.getModelProvider() == ModelProvider.OPENROUTER) {
-            builder.header(
-                    "Authorization",
-                    "Bearer " + apiKey
-            );
+            builder.header("Authorization", "Bearer " + apiKey);
         }
 
         HttpRequest requestObject = builder
-                .POST(
-                        HttpRequest.BodyPublishers.ofString(
-                                GSON.toJson(request)
-                        )
-                )
+                .POST(HttpRequest.BodyPublishers.ofString(GSON.toJson(request)))
                 .build();
 
         return CLIENT.send(
