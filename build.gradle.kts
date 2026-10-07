@@ -16,6 +16,9 @@ dependencies {
 
     implementation(libs.gson)
     implementation(libs.postgresql)
+
+    implementation(libs.slf4j)
+    implementation(libs.log4j)
 }
 
 tasks.test {
