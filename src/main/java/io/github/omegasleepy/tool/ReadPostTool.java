@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import io.github.omegasleepy.Main;
 import io.github.omegasleepy.openrouter.records.FunctionDefinition;
+import io.github.omegasleepy.openrouter.records.JsonSchema;
 import io.github.omegasleepy.openrouter.records.Tool;
 
 import java.util.List;
@@ -19,16 +20,16 @@ public class ReadPostTool implements AgentTool {
             new FunctionDefinition(
                     "read_post",
                     "Read a post from a given UUID.",
-                    Map.of(
-                            "type", "object",
-                            "properties", Map.of(
+                    new JsonSchema(
+                            "object",
+                            Map.of(
                                     "postId", Map.of(
                                             "type", "string",
                                             "format", "uuid",
                                             "description", "The UUID of the post you want to read."
                                     )
                             ),
-                            "required", List.of("postId")
+                            List.of("postId")
                     )
             )
     );

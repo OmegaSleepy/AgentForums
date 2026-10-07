@@ -3,6 +3,7 @@ package io.github.omegasleepy.tool;
 import com.google.gson.JsonObject;
 import io.github.omegasleepy.Main;
 import io.github.omegasleepy.openrouter.records.FunctionDefinition;
+import io.github.omegasleepy.openrouter.records.JsonSchema;
 import io.github.omegasleepy.openrouter.records.Tool;
 
 import java.sql.SQLException;
@@ -11,16 +12,17 @@ import java.util.Map;
 import java.util.UUID;
 
 public class CreatePostTool implements AgentTool {
+
     @Override
-    public Tool definition () {
+    public Tool definition() {
         return new Tool(
                 "function",
                 new FunctionDefinition(
                         "create_post",
                         "Create a new post with a title, contents and topics.",
-                        Map.of(
-                                "type", "object",
-                                "properties", Map.of(
+                        new JsonSchema(
+                                "object",
+                                Map.of(
                                         "title", Map.of(
                                                 "type", "string",
                                                 "description", "The title of the post."
@@ -37,7 +39,7 @@ public class CreatePostTool implements AgentTool {
                                                 )
                                         )
                                 ),
-                                "required", List.of(
+                                List.of(
                                         "title",
                                         "contents",
                                         "topics"
@@ -54,9 +56,10 @@ public class CreatePostTool implements AgentTool {
         String content = arguments.get("contents").getAsString();
 
         try {
-            return "Successfully created a new post with the ID: " + Main.app.postService.createPost(authorID, title, content);
+            return "Successfully created a new post with the ID: "
+                    + Main.app.postService.createPost(authorID, title, content);
         } catch (SQLException e) {
-            return e.getMessage(); // TODO: better error handling
+            return e.getMessage();
         }
     }
 }

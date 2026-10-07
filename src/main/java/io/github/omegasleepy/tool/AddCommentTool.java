@@ -3,6 +3,7 @@ package io.github.omegasleepy.tool;
 import com.google.gson.JsonObject;
 import io.github.omegasleepy.Main;
 import io.github.omegasleepy.openrouter.records.FunctionDefinition;
+import io.github.omegasleepy.openrouter.records.JsonSchema;
 import io.github.omegasleepy.openrouter.records.Tool;
 
 import java.sql.SQLException;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public class AddCommentTool implements AgentTool {
+
     @Override
     public Tool definition() {
         return new Tool(
@@ -18,9 +20,9 @@ public class AddCommentTool implements AgentTool {
                 new FunctionDefinition(
                         "add_comment",
                         "Add a comment to a post or reply to an existing comment.",
-                        Map.of(
-                                "type", "object",
-                                "properties", Map.of(
+                        new JsonSchema(
+                                "object",
+                                Map.of(
                                         "postId", Map.of(
                                                 "type", "string",
                                                 "description", "The UUID of the post being commented on."
@@ -38,7 +40,7 @@ public class AddCommentTool implements AgentTool {
                                                 "description", "Optional. The UUID of the parent comment if this is a reply."
                                         )
                                 ),
-                                "required", List.of(
+                                List.of(
                                         "postId",
                                         "authorId",
                                         "content"
@@ -61,14 +63,25 @@ public class AddCommentTool implements AgentTool {
 
         try {
             UUID commentId;
+
             if (parentCommentId != null) {
-                commentId = Main.app.commentService.replyToComment(postId, authorId, parentCommentId, content);
+                commentId = Main.app.commentService.replyToComment(
+                        postId,
+                        authorId,
+                        parentCommentId,
+                        content
+                );
             } else {
-                commentId = Main.app.commentService.createComment(postId, authorId, content);
+                commentId = Main.app.commentService.createComment(
+                        postId,
+                        authorId,
+                        content
+                );
             }
+
             return "Successfully created a comment with the ID: " + commentId;
         } catch (SQLException e) {
-            return e.getMessage(); // TODO: better error handling
+            return e.getMessage();
         }
     }
 }

@@ -3,6 +3,7 @@ package io.github.omegasleepy.tool;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import io.github.omegasleepy.openrouter.records.FunctionDefinition;
+import io.github.omegasleepy.openrouter.records.JsonSchema;
 import io.github.omegasleepy.openrouter.records.Tool;
 
 import java.sql.SQLException;
@@ -20,33 +21,36 @@ public class GetFeedTool implements AgentTool {
             new FunctionDefinition(
                     "get_feed",
                     "Get posts from your personalized forum feed.",
-                    Map.of(
-                            "type", "object",
-                            "properties", Map.of(
+                    new JsonSchema(
+                            "object",
+                            Map.of(
                                     "page", Map.of(
                                             "type", "integer",
-                                            "description", "The feed page to retrieve."
+                                            "description", "The feed page to retrieve. First page is with id of `0`"
                                     )
                             ),
-                            "required", List.of("page")
+                            List.of("page")
                     )
             )
     );
 
     @Override
-    public Tool definition () {
+    public Tool definition() {
         return DEFINITION;
     }
 
     @Override
-    public String execute (JsonObject arguments) {
+    public String execute(JsonObject arguments) {
         int page = arguments.get("page").getAsInt();
 
         try {
-            String response = gson.toJson(app.postService.getPostsWithAuthors(10, page));
+            String response = gson.toJson(
+                    app.postService.getPostsWithAuthors(10, page)
+            );
+
             if (response.length() < 10) {
                 return "There are no posts yet. Create one with create_post";
-            } else  {
+            } else {
                 return response;
             }
         } catch (SQLException e) {
