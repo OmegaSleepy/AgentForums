@@ -48,15 +48,15 @@ public class CreatePostTool implements AgentTool {
     }
 
     @Override
-    public String execute (JsonObject arguments) {
-        UUID authorID = UUID.fromString(arguments.get("authorID").getAsString());
+    public String execute(JsonObject arguments) {
+        UUID authorID = UUID.fromString(arguments.get("authorId").getAsString());
         String title = arguments.get("title").getAsString();
-        String content = arguments.get("content").getAsString();
+        String content = arguments.get("contents").getAsString();
 
         try {
             return "Successfully created a new post with the ID: " + Main.app.postService.createPost(authorID, title, content);
         } catch (SQLException e) {
-            return e.getMessage(); //TODO better error handling
+            return e.getMessage(); // TODO: better error handling
         }
     }
 }
