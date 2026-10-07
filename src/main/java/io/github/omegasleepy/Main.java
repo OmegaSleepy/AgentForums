@@ -29,10 +29,10 @@ public class Main {
     public static void main (String[] args) throws SQLException, java.io.IOException {
         logger = LoggerFactory.getLogger(Main.class);
         CountDownLatch shutdownLatch = new CountDownLatch(1);
-        try (AgentScheduler scheduler = new AgentScheduler(app.agentService, new UserFactory(), 15, 1, TimeUnit.SECONDS, 250, TimeUnit.MILLISECONDS); ScheduledExecutorService shutdownExecutor = Executors.newSingleThreadScheduledExecutor()) {
+        try (AgentScheduler scheduler = new AgentScheduler(app.agentService, new UserFactory(), 5, 1, TimeUnit.SECONDS, 250, TimeUnit.MILLISECONDS); ScheduledExecutorService shutdownExecutor = Executors.newSingleThreadScheduledExecutor()) {
             scheduler.start();
             LocalDateTime now = LocalDateTime.now();
-            LocalDateTime shutdownTime = now.with(LocalTime.of(6, 30));
+            LocalDateTime shutdownTime = now.with(LocalTime.of(0, 20));
             if (!shutdownTime.isAfter(now)) {
                 shutdownTime = shutdownTime.plusDays(1);
             }

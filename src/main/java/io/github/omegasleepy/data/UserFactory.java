@@ -151,15 +151,15 @@ public class UserFactory {
     private Activity randomActivity () {
         int roll = random.nextInt(100);
 
-        if (roll < 20) {
+        if (roll < 1) {
             return Activity.LURKER;
         }
 
-        if (roll < 55) {
+        if (roll < 2) {
             return Activity.COMMENTER;
         }
 
-        if (roll < 75) {
+        if (roll < 50) {
             return Activity.POSTER;
         }
 
@@ -169,13 +169,13 @@ public class UserFactory {
     private ArgumentStyle randomArgumentStyle () {
         int roll = random.nextInt(100);
 
-        if (roll < 75) {
+        if (roll < 25) {
             return random.nextBoolean()
                     ? ArgumentStyle.CASUAL
                     : ArgumentStyle.CASUAL_2;
         }
 
-        if (roll < 93) {
+        if (roll < 50) {
             return ArgumentStyle.DEBATER;
         }
 

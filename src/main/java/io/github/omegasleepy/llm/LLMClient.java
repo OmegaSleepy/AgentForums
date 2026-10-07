@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import io.github.omegasleepy.database.records.Agent;
 import io.github.omegasleepy.llm.records.*;
+import io.github.omegasleepy.service.AgentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static io.github.omegasleepy.Main.app;
 
@@ -27,125 +29,129 @@ public final class LLMClient {
     private LLMClient () {
     }
 
-    public static void run (String apiKey, Agent agent, List<Tool> tools) throws IOException, InterruptedException {
+    public static void run(String apiKey, Agent agent, List<Tool> tools) throws IOException, InterruptedException {
+        AgentService agentService = app.agentService;
+        UUID turnId = null;
+        int actionCount = 0;
+        int toolCallCount = 0;
 
-        ChatRequest initialRequest = createRequest(agent, tools);
-        List<Message> messages = new ArrayList<>(initialRequest.messages());
+        try {
+            turnId = agentService.createAgentTurn(agent.id());
+        } catch (Exception e) {
+            logger.error("[{}] Failed to initialize agent turn record", agent.name(), e);
+        }
 
-        for (int iteration = 0; iteration < 10; iteration++) {
+        String status = "FAILED";
 
-            ChatRequest request = new ChatRequest(
-                    initialRequest.model(),
-                    List.copyOf(messages),
-                    initialRequest.reasoning(),
-                    initialRequest.tools(),
-                    initialRequest.toolChoice()
-            );
+        try {
+            ChatRequest initialRequest = createRequest(agent, tools);
+            List<Message> messages = new ArrayList<>(initialRequest.messages());
 
-            HttpResponse<String> response = fetch(apiKey, request);
+            for (int iteration = 0; iteration < 10; iteration++) {
+                actionCount++; // Track loop iteration steps
 
-            if (response.statusCode() / 100 != 2) {
-                throw new IOException(
-                        "LLM server returned HTTP " + response.statusCode() + ": " + response.body()
-                );
-            }
-
-            AgentResponse agentResponse = GSON.fromJson(response.body(), AgentResponse.class);
-
-            if (agentResponse.choices() == null || agentResponse.choices().isEmpty()) {
-                throw new IOException("LLM returned no choices.");
-            }
-
-            ConversationMessage assistantMessage = agentResponse.choices().getFirst().message();
-
-            if (assistantMessage == null) {
-                throw new IOException("LLM returned a null message.");
-            }
-
-            List<ToolCall> toolCalls = assistantMessage.toolCalls();
-
-            messages.add(assistantMessage.getAsMessage());
-
-            if (toolCalls == null || toolCalls.isEmpty()) {
-                logger.info("[{}] Agent finished: {}", agent.name(), assistantMessage.content());
-                return;
-            }
-
-            for (ToolCall toolCall : toolCalls) {
-                if (toolCall.function() == null) {
-                    logger.warn("[{}] Received tool call without function.", agent.name());
-                    continue;
-                }
-
-                String toolName = toolCall.function().name();
-
-                var tool = app.getToolRegistry().get(toolName);
-
-                if (tool == null) {
-                    String result = "Unknown tool: " + toolName;
-
-                    logger.warn("[{}] {}", agent.name(), result);
-
-                    messages.add(new Message("tool", result, toolCall.id()));
-
-                    continue;
-                }
-
-                JsonObject arguments;
-
-                try {
-                    arguments = GSON.fromJson(toolCall.function().arguments(), JsonObject.class);
-                } catch (Exception e) {
-                    String result = "Invalid tool arguments: " + e.getMessage();
-
-                    logger.warn("[{}] {}", agent.name(), result, e);
-
-                    messages.add(new Message("tool", result, toolCall.id()));
-
-                    continue;
-                }
-
-                arguments.addProperty("authorId", agent.id().toString());
-
-                logger.info(
-                        "[{}] Calling {}: {}",
-                        agent.name(),
-                        toolName,
-                        arguments
+                ChatRequest request = new ChatRequest(
+                        initialRequest.model(),
+                        List.copyOf(messages),
+                        initialRequest.reasoning(),
+                        initialRequest.tools(),
+                        initialRequest.toolChoice()
                 );
 
-                String result;
+                HttpResponse<String> response = fetch(apiKey, request);
 
-                try {
-                    result = tool.execute(arguments);
-                } catch (Exception e) {
-                    result = "Tool execution failed: " + e.getMessage();
-
-                    logger.error(
-                            "[{}] Tool {} failed: {}",
-                            agent.name(),
-                            toolName,
-                            e.getMessage(),
-                            e
-                    );
+                if (response.statusCode() / 100 != 2) {
+                    throw new IOException("LLM server returned HTTP " + response.statusCode() + ": " + response.body());
                 }
 
-                logger.info(
-                        "[{}] Result: {}",
-                        agent.name(),
-                        result
-                );
+                AgentResponse agentResponse = GSON.fromJson(response.body(), AgentResponse.class);
 
-                messages.add(new Message("tool", result, toolCall.id()));
+                if (agentResponse.choices() == null || agentResponse.choices().isEmpty()) {
+                    throw new IOException("LLM returned no choices.");
+                }
 
-                if (toolName.equals("log_off")) {
-                    logger.info("[{}] Logged off.", agent.name());
+                ConversationMessage assistantMessage = agentResponse.choices().getFirst().message();
+
+                if (assistantMessage == null) {
+                    throw new IOException("LLM returned a null message.");
+                }
+
+                List<ToolCall> toolCalls = assistantMessage.toolCalls();
+
+                messages.add(assistantMessage.getAsMessage());
+
+                if (toolCalls == null || toolCalls.isEmpty()) {
+                    logger.info("[{}] Agent finished: {}", agent.name(), assistantMessage.content());
+                    status = "COMPLETED";
                     return;
+                }
+
+                for (ToolCall toolCall : toolCalls) {
+                    toolCallCount++; // Track each executed tool call
+
+                    if (toolCall.function() == null) {
+                        logger.warn("[{}] Received tool call without function.", agent.name());
+                        continue;
+                    }
+
+                    String toolName = toolCall.function().name();
+                    var tool = app.getToolRegistry().get(toolName);
+
+                    if (tool == null) {
+                        String result = "Unknown tool: " + toolName;
+                        logger.warn("[{}] {}", agent.name(), result);
+                        messages.add(new Message("tool", result, toolCall.id()));
+                        continue;
+                    }
+
+                    JsonObject arguments;
+
+                    try {
+                        arguments = GSON.fromJson(toolCall.function().arguments(), JsonObject.class);
+                    } catch (Exception e) {
+                        String result = "Invalid tool arguments: " + e.getMessage();
+                        logger.warn("[{}] {}", agent.name(), result, e);
+                        messages.add(new Message("tool", result, toolCall.id()));
+                        continue;
+                    }
+
+                    arguments.addProperty("authorId", agent.id().toString());
+
+                    logger.info("[{}] Calling {}: {}", agent.name(), toolName, arguments);
+
+                    String result;
+
+                    try {
+                        result = tool.execute(arguments);
+                    } catch (Exception e) {
+                        result = "Tool execution failed: " + e.getMessage();
+                        logger.error("[{}] Tool {} failed: {}", agent.name(), toolName, e.getMessage(), e);
+                    }
+
+                    logger.info("[{}] Result: {}", agent.name(), result);
+
+                    messages.add(new Message("tool", result, toolCall.id()));
+
+                    if (toolName.equals("log_off")) {
+                        logger.info("[{}] Logged off.", agent.name());
+                        status = "COMPLETED";
+                        return;
+                    }
+                }
+            }
+
+            logger.warn("[{}] Reached maximum iterations.", agent.name());
+            status = "LIMIT_REACHED";
+
+        } finally {
+            if (turnId != null) {
+                try {
+                    agentService.updateAgentTurn(turnId, status, actionCount, toolCallCount);
+                } catch (Exception e) {
+                    logger.error("[{}] Failed to update agent turn status", agent.name(), e);
                 }
             }
         }
-
-        logger.warn("[{}] Reached maximum iterations.", agent.name());
     }
 
     private static ChatRequest createRequest (Agent agent, List<Tool> tools) {
