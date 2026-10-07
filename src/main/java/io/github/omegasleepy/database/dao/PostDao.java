@@ -14,7 +14,8 @@ public class PostDao {
         String sql = "INSERT INTO posts (author_id, title, content) VALUES (?, ?, ?) RETURNING id";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, authorId);
-            stmt.setString(2, content);
+            stmt.setString(2, title);
+            stmt.setString(3, content);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return (UUID) rs.getObject("id");
