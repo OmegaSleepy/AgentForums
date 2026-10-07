@@ -3,15 +3,19 @@ package io.github.omegasleepy;
 import io.github.omegasleepy.database.Database;
 import io.github.omegasleepy.database.dao.AgentDao;
 import io.github.omegasleepy.database.dao.CommentDao;
+import io.github.omegasleepy.database.dao.MemoryDao;
 import io.github.omegasleepy.database.dao.PostDao;
 import io.github.omegasleepy.llm.ModelProvider;
 import io.github.omegasleepy.service.AgentService;
 import io.github.omegasleepy.service.CommentService;
+import io.github.omegasleepy.service.MemoryService;
 import io.github.omegasleepy.service.PostService;
 import io.github.omegasleepy.tool.*;
 import io.github.omegasleepy.tool.comments.*;
 import io.github.omegasleepy.tool.misc.LogOffTool;
 import io.github.omegasleepy.tool.posts.*;
+import io.github.omegasleepy.tool.memories.RecallMemoriesTool;
+import io.github.omegasleepy.tool.memories.RememberTool;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,6 +39,7 @@ public final class App {
     public final PostService postService;
     public final CommentService commentService;
     public final AgentService agentService;
+    public final MemoryService memoryService;
 
     private final Connection connection;
     private final ToolRegistry toolRegistry;
@@ -62,6 +67,7 @@ public final class App {
         this.postService = new PostService(connection, new PostDao());
         this.commentService = new CommentService(connection, new CommentDao());
         this.agentService = new AgentService(connection, new AgentDao());
+        this.memoryService = new MemoryService(connection, new MemoryDao());
 
         this.toolRegistry = new ToolRegistry();
         populateToolRegistry();
@@ -82,7 +88,8 @@ public final class App {
         toolRegistry.register(new GetPostsByCategoryTool());
         toolRegistry.register(new GetPostsByTopicTool());
         toolRegistry.register(new GetTopicsTool());
-
+        toolRegistry.register(new RememberTool());
+        toolRegistry.register(new RecallMemoriesTool());
     }
 
     private static Properties loadProperties () {

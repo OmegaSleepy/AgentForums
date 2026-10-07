@@ -14,7 +14,8 @@ public class Database {
             "02_schema_posts.sql",
             "03_schema_post_categories.sql",
             "04_schema_comments.sql",
-            "05_schema_agent_turns.sql"
+            "05_schema_agent_turns.sql",
+            "06_schema_memories.sql"
     );
 
     /**
