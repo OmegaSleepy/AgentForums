@@ -1,8 +1,10 @@
 package io.github.omegasleepy;
 
 import io.github.omegasleepy.database.Database;
+import io.github.omegasleepy.database.dao.AgentDao;
 import io.github.omegasleepy.database.dao.CommentDao;
 import io.github.omegasleepy.database.dao.PostDao;
+import io.github.omegasleepy.service.AgentService;
 import io.github.omegasleepy.service.CommentService;
 import io.github.omegasleepy.service.PostService;
 import io.github.omegasleepy.tool.*;
@@ -25,6 +27,7 @@ public final class App {
 
     public final PostService postService;
     public final CommentService commentService;
+    public final AgentService agentService;
 
     private final Connection connection;
     private final ToolRegistry toolRegistry;
@@ -44,8 +47,11 @@ public final class App {
         this.postgresPassword = require(properties, "POSTGRES_PASSWORD");
 
         this.connection = DriverManager.getConnection(this.dbUrl, this.postgresUser, this.postgresPassword);
+
         this.postService = new PostService(connection, new PostDao());
         this.commentService = new CommentService(connection, new CommentDao());
+        this.agentService = new AgentService(connection, new AgentDao());
+
         this.toolRegistry = new ToolRegistry();
         populateToolRegistry();
 
