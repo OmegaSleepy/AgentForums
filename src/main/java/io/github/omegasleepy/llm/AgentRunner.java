@@ -9,9 +9,10 @@ import static io.github.omegasleepy.Main.app;
 
 public final class AgentRunner {
 
-    private AgentRunner() {}
+    private AgentRunner () {
+    }
 
-    public static void runAgent(Agent agent)
+    public static void runAgent (Agent agent)
             throws IOException, InterruptedException {
 
         LLMClient.run(
@@ -21,7 +22,7 @@ public final class AgentRunner {
         );
     }
 
-    public static void runAgent(String agentId)
+    public static void runAgent (String agentId)
             throws IOException, InterruptedException, SQLException {
 
         Agent agent = app.agentService
