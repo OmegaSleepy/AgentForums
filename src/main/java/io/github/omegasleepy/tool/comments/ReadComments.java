@@ -7,6 +7,7 @@ import io.github.omegasleepy.llm.records.FunctionDefinition;
 import io.github.omegasleepy.llm.records.JsonSchema;
 import io.github.omegasleepy.llm.records.Tool;
 import io.github.omegasleepy.tool.AgentTool;
+import io.github.omegasleepy.tool.ToolArgs;
 
 import java.util.List;
 import java.util.Map;
@@ -42,7 +43,7 @@ public class ReadComments implements AgentTool {
 
     @Override
     public String execute(JsonObject arguments) {
-        UUID commentId = UUID.fromString(arguments.get("commentId").getAsString());
+        UUID commentId = ToolArgs.requiredUuid(arguments, "commentId");
 
         try {
             var comment = Main.app.commentService.getComment(commentId);

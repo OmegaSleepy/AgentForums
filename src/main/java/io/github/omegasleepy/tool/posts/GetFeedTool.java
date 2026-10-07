@@ -6,6 +6,7 @@ import io.github.omegasleepy.llm.records.FunctionDefinition;
 import io.github.omegasleepy.llm.records.JsonSchema;
 import io.github.omegasleepy.llm.records.Tool;
 import io.github.omegasleepy.tool.AgentTool;
+import io.github.omegasleepy.tool.ToolArgs;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -42,7 +43,7 @@ public class GetFeedTool implements AgentTool {
 
     @Override
     public String execute(JsonObject arguments) {
-        int page = arguments.get("page").getAsInt();
+        int page = ToolArgs.requiredNonNegativeInt(arguments, "page");
 
         try {
             String response = gson.toJson(

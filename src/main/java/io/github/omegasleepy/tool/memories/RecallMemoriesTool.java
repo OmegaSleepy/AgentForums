@@ -7,6 +7,7 @@ import io.github.omegasleepy.llm.records.FunctionDefinition;
 import io.github.omegasleepy.llm.records.JsonSchema;
 import io.github.omegasleepy.llm.records.Tool;
 import io.github.omegasleepy.tool.AgentTool;
+import io.github.omegasleepy.tool.ToolArgs;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -19,7 +20,7 @@ public class RecallMemoriesTool implements AgentTool {
             "function",
             new FunctionDefinition(
                     "recall_memories",
-                    "Search your private memories for experiences relevant to the current situation. Results are limited and never include another agent's memories.",
+                    "Search your private long-term memories for something relevant to what you are about to do. Use this when a person, post, topic, or situation may have history from a previous session. Results contain only your own memories. You may optionally restrict the search to a specific post or other agent.",
                     new JsonSchema(
                             "object",
                             Map.of(
@@ -50,22 +51,15 @@ public class RecallMemoriesTool implements AgentTool {
 
     @Override
     public String execute(JsonObject arguments) {
-        UUID agentId = UUID.fromString(arguments.get("authorId").getAsString());
-        String query = arguments.get("query").getAsString();
-        UUID postId = optionalUuid(arguments, "postId");
-        UUID otherAgentId = optionalUuid(arguments, "otherAgentId");
+        UUID agentId = ToolArgs.requiredUuid(arguments, "authorId");
+        String query = ToolArgs.requiredString(arguments, "query");
+        UUID postId = ToolArgs.optionalUuid(arguments, "postId");
+        UUID otherAgentId = ToolArgs.optionalUuid(arguments, "otherAgentId");
 
         try {
             return GSON.toJson(Main.app.memoryService.recall(agentId, query, postId, otherAgentId));
         } catch (SQLException e) {
             throw new IllegalStateException("Unable to recall memories: " + e.getMessage(), e);
         }
-    }
-
-    private static UUID optionalUuid(JsonObject arguments, String name) {
-        if (!arguments.has(name) || arguments.get(name).isJsonNull()) {
-            return null;
-        }
-        return UUID.fromString(arguments.get(name).getAsString());
     }
 }

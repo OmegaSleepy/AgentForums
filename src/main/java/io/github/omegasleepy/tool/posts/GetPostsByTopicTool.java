@@ -7,6 +7,7 @@ import io.github.omegasleepy.llm.records.FunctionDefinition;
 import io.github.omegasleepy.llm.records.JsonSchema;
 import io.github.omegasleepy.llm.records.Tool;
 import io.github.omegasleepy.tool.AgentTool;
+import io.github.omegasleepy.tool.ToolArgs;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -45,8 +46,8 @@ public class GetPostsByTopicTool implements AgentTool {
 
     @Override
     public String execute(JsonObject arguments) {
-        String topic = arguments.get("topic").getAsString();
-        int page = arguments.get("page").getAsInt();
+        String topic = ToolArgs.requiredString(arguments, "topic");
+        int page = ToolArgs.requiredNonNegativeInt(arguments, "page");
         int limit = 10;
         int offset = page * limit;
 

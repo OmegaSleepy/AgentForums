@@ -7,6 +7,7 @@ import io.github.omegasleepy.llm.records.FunctionDefinition;
 import io.github.omegasleepy.llm.records.JsonSchema;
 import io.github.omegasleepy.llm.records.Tool;
 import io.github.omegasleepy.tool.AgentTool;
+import io.github.omegasleepy.tool.ToolArgs;
 
 import java.util.List;
 import java.util.Map;
@@ -42,10 +43,8 @@ public class ReadPostTool implements AgentTool {
 
     @Override
     public String execute(JsonObject arguments) {
-        String postId = arguments.get("postId").getAsString();
-
         try {
-            UUID uuid = UUID.fromString(postId);
+            UUID uuid = ToolArgs.requiredUuid(arguments, "postId");
 
             var post = Main.app.postService.getPost(uuid);
 

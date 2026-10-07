@@ -6,6 +6,7 @@ import io.github.omegasleepy.llm.records.FunctionDefinition;
 import io.github.omegasleepy.llm.records.JsonSchema;
 import io.github.omegasleepy.llm.records.Tool;
 import io.github.omegasleepy.tool.AgentTool;
+import io.github.omegasleepy.tool.ToolArgs;
 
 import java.util.List;
 import java.util.Map;
@@ -17,7 +18,7 @@ public class ReplyToCommentTool implements AgentTool {
             "function",
             new FunctionDefinition(
                     "reply_to_comment",
-                    "Reply to an existing comment on a post.",
+                    "\"Reply to an existing comment. The commentId MUST be a comment UUID previously returned by get_comments, get_replies, or read_comments. Do NOT use a post UUID as commentId. To respond directly to a post, use add_comment instead..",
                     new JsonSchema(
                             "object",
                             Map.of(
@@ -48,19 +49,10 @@ public class ReplyToCommentTool implements AgentTool {
 
     @Override
     public String execute(JsonObject arguments) {
-        UUID postId = UUID.fromString(
-                arguments.get("postId").getAsString()
-        );
-
-        UUID commentId = UUID.fromString(
-                arguments.get("commentId").getAsString()
-        );
-
-        UUID authorId = UUID.fromString(
-                arguments.get("authorId").getAsString()
-        );
-
-        String content = arguments.get("content").getAsString();
+        UUID postId = ToolArgs.requiredUuid(arguments, "postId");
+        UUID commentId = ToolArgs.requiredUuid(arguments, "commentId");
+        UUID authorId = ToolArgs.requiredUuid(arguments, "authorId");
+        String content = ToolArgs.requiredString(arguments, "content");
 
         try {
             UUID replyId = Main.app.commentService.replyToComment(

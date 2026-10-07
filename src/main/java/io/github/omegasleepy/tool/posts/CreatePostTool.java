@@ -1,15 +1,14 @@
 package io.github.omegasleepy.tool.posts;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.github.omegasleepy.Main;
 import io.github.omegasleepy.llm.records.FunctionDefinition;
 import io.github.omegasleepy.llm.records.JsonSchema;
 import io.github.omegasleepy.llm.records.Tool;
 import io.github.omegasleepy.tool.AgentTool;
+import io.github.omegasleepy.tool.ToolArgs;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -54,16 +53,11 @@ public class CreatePostTool implements AgentTool {
 
     @Override
     public String execute(JsonObject arguments) {
-        UUID authorID = UUID.fromString(arguments.get("authorId").getAsString());
-        String title = arguments.get("title").getAsString();
-        String content = arguments.get("contents").getAsString();
-        String topic = arguments.get("topic").getAsString();
-
-        List<String> categories = new ArrayList<>();
-        if (arguments.has("categories") && !arguments.get("categories").isJsonNull()) {
-            JsonArray catArray = arguments.getAsJsonArray("categories");
-            catArray.forEach(elem -> categories.add(elem.getAsString()));
-        }
+        UUID authorID = ToolArgs.requiredUuid(arguments, "authorId");
+        String title = ToolArgs.requiredString(arguments, "title");
+        String content = ToolArgs.requiredString(arguments, "contents");
+        String topic = ToolArgs.requiredString(arguments, "topic");
+        List<String> categories = ToolArgs.requiredStringList(arguments, "categories");
 
         try {
             UUID postId = Main.app.postService.createPost(authorID, title, content, topic, categories);

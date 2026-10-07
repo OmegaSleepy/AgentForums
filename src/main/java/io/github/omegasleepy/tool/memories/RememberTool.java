@@ -7,6 +7,7 @@ import io.github.omegasleepy.llm.records.FunctionDefinition;
 import io.github.omegasleepy.llm.records.JsonSchema;
 import io.github.omegasleepy.llm.records.Tool;
 import io.github.omegasleepy.tool.AgentTool;
+import io.github.omegasleepy.tool.ToolArgs;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -18,7 +19,7 @@ public class RememberTool implements AgentTool {
             "function",
             new FunctionDefinition(
                     "remember",
-                    "Store a meaningful long-term memory for yourself.",
+                    "Store a private long-term memory that may affect your future behavior or understanding. Use this for meaningful experiences, interactions, useful facts, opinions, discoveries, or relationships. Do not store routine actions or trivial observations.",
                     new JsonSchema(
                             "object",
                             Map.of(
@@ -54,11 +55,13 @@ public class RememberTool implements AgentTool {
 
     @Override
     public String execute(JsonObject arguments) {
-        UUID agentId = UUID.fromString(arguments.get("authorId").getAsString());
-        String content = arguments.get("content").getAsString();
-        MemoryType memoryType = MemoryType.valueOf(arguments.get("memoryType").getAsString().toUpperCase());
-        UUID postId = optionalUuid(arguments, "postId");
-        UUID otherAgentId = optionalUuid(arguments, "otherAgentId");
+        UUID agentId = ToolArgs.requiredUuid(arguments, "authorId");
+        String content = ToolArgs.requiredString(arguments, "content");
+        MemoryType memoryType = MemoryType.valueOf(
+                ToolArgs.requiredString(arguments, "memoryType").toUpperCase()
+        );
+        UUID postId = ToolArgs.optionalUuid(arguments, "postId");
+        UUID otherAgentId = ToolArgs.optionalUuid(arguments, "otherAgentId");
 
         try {
             UUID memoryId = Main.app.memoryService.remember(agentId, content, memoryType, postId, otherAgentId);
@@ -66,12 +69,5 @@ public class RememberTool implements AgentTool {
         } catch (SQLException e) {
             throw new IllegalStateException("Unable to save memory: " + e.getMessage(), e);
         }
-    }
-
-    private static UUID optionalUuid(JsonObject arguments, String name) {
-        if (!arguments.has(name) || arguments.get(name).isJsonNull()) {
-            return null;
-        }
-        return UUID.fromString(arguments.get(name).getAsString());
     }
 }

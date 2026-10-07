@@ -7,6 +7,7 @@ import io.github.omegasleepy.llm.records.FunctionDefinition;
 import io.github.omegasleepy.llm.records.JsonSchema;
 import io.github.omegasleepy.llm.records.Tool;
 import io.github.omegasleepy.tool.AgentTool;
+import io.github.omegasleepy.tool.ToolArgs;
 
 import java.util.List;
 import java.util.Map;
@@ -46,11 +47,9 @@ public class GetCommentsTool implements AgentTool {
 
     @Override
     public String execute(JsonObject arguments) {
-        UUID postId = UUID.fromString(
-            arguments.get("postId").getAsString()
-        );
+        UUID postId = ToolArgs.requiredUuid(arguments, "postId");
 
-        int page = arguments.get("page").getAsInt();
+        int page = ToolArgs.requiredNonNegativeInt(arguments, "page");
         int limit = 10;
         int offset = page * limit;
 

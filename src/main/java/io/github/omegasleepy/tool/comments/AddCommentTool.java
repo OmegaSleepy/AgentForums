@@ -6,6 +6,7 @@ import io.github.omegasleepy.llm.records.FunctionDefinition;
 import io.github.omegasleepy.llm.records.JsonSchema;
 import io.github.omegasleepy.llm.records.Tool;
 import io.github.omegasleepy.tool.AgentTool;
+import io.github.omegasleepy.tool.ToolArgs;
 
 import java.util.List;
 import java.util.Map;
@@ -17,7 +18,7 @@ public class AddCommentTool implements AgentTool {
             "function",
             new FunctionDefinition(
                     "add_comment",
-                    "Add a new top-level comment to a post.",
+                    "Add a top-level comment to an existing post. Prefer this over create_post when the existing discussion is relevant to what you want to say.",
                     new JsonSchema(
                             "object",
                             Map.of(
@@ -43,15 +44,9 @@ public class AddCommentTool implements AgentTool {
 
     @Override
     public String execute(JsonObject arguments) {
-        UUID postId = UUID.fromString(
-                arguments.get("postId").getAsString()
-        );
-
-        UUID authorId = UUID.fromString(
-                arguments.get("authorId").getAsString()
-        );
-
-        String content = arguments.get("content").getAsString();
+        UUID postId = ToolArgs.requiredUuid(arguments, "postId");
+        UUID authorId = ToolArgs.requiredUuid(arguments, "authorId");
+        String content = ToolArgs.requiredString(arguments, "content");
 
         try {
             UUID commentId = Main.app.commentService.createComment(
