@@ -1,6 +1,7 @@
 package io.github.omegasleepy.database.dao;
 
 import io.github.omegasleepy.database.records.Agent;
+import io.github.omegasleepy.database.records.AgentTurn;
 
 import java.sql.*;
 import java.time.Instant;
@@ -106,6 +107,62 @@ public class AgentDao {
         }
     }
 
+    public UUID createAgentTurn(Connection conn, UUID agentId) throws SQLException {
+        String sql = "INSERT INTO agent_turns (agent_id) VALUES (?) RETURNING id";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setObject(1, agentId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return (UUID) rs.getObject("id");
+                }
+            }
+        }
+        throw new SQLException("Failed to create agent turn.");
+    }
+
+    public boolean updateAgentTurn(Connection conn, UUID turnId, String status, int actionCount, int toolCallCount) throws SQLException {
+        String sql = "UPDATE agent_turns SET finished_at = CURRENT_TIMESTAMP, status = ?::agent_turn_status_enum, " +
+                "action_count = ?, tool_call_count = ? WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, status);
+            stmt.setInt(2, actionCount);
+            stmt.setInt(3, toolCallCount);
+            stmt.setObject(4, turnId);
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    public Optional<AgentTurn> getAgentTurn(Connection conn, UUID turnId) throws SQLException {
+        String sql = "SELECT id, agent_id, started_at, finished_at, status, action_count, tool_call_count " +
+                "FROM agent_turns WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setObject(1, turnId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRowToAgentTurn(rs));
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    public List<AgentTurn> getTurnsByAgentId(Connection conn, UUID agentId, int limit, int offset) throws SQLException {
+        String sql = "SELECT id, agent_id, started_at, finished_at, status, action_count, tool_call_count " +
+                "FROM agent_turns WHERE agent_id = ? ORDER BY started_at DESC LIMIT ? OFFSET ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setObject(1, agentId);
+            stmt.setInt(2, limit);
+            stmt.setInt(3, offset);
+            List<AgentTurn> turns = new ArrayList<>();
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    turns.add(mapRowToAgentTurn(rs));
+                }
+            }
+            return turns;
+        }
+    }
+
     private List<Agent> executeQueryList(PreparedStatement stmt) throws SQLException {
         List<Agent> agents = new ArrayList<>();
         try (ResultSet rs = stmt.executeQuery()) {
@@ -133,5 +190,18 @@ public class AgentDao {
         );
     }
 
+    private AgentTurn mapRowToAgentTurn(ResultSet rs) throws SQLException {
+        Timestamp startedAt = rs.getTimestamp("started_at");
+        Timestamp finishedAt = rs.getTimestamp("finished_at");
 
+        return new AgentTurn(
+                (UUID) rs.getObject("id"),
+                (UUID) rs.getObject("agent_id"),
+                startedAt != null ? startedAt.toInstant() : null,
+                finishedAt != null ? finishedAt.toInstant() : null,
+                rs.getString("status"),
+                rs.getInt("action_count"),
+                rs.getInt("tool_call_count")
+        );
+    }
 }

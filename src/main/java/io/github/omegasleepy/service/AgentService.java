@@ -2,6 +2,7 @@ package io.github.omegasleepy.service;
 
 import io.github.omegasleepy.database.dao.AgentDao;
 import io.github.omegasleepy.database.records.Agent;
+import io.github.omegasleepy.database.records.AgentTurn;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -78,6 +79,40 @@ public class AgentService {
         Objects.requireNonNull(model, "model must not be null");
         validatePagination(limit, offset);
         return agentDao.getAgentsByModel(connection, model, limit, offset);
+    }
+
+    // --- Turn Logging Operations ---
+
+    public UUID createAgentTurn(UUID agentId) throws SQLException {
+        Objects.requireNonNull(agentId, "agentId must not be null");
+        return agentDao.createAgentTurn(connection, agentId);
+    }
+
+    public boolean updateAgentTurn(UUID turnId, String status, int actionCount, int toolCallCount) throws SQLException {
+        Objects.requireNonNull(turnId, "turnId must not be null");
+        requireText(status, "status");
+        if (actionCount < 0) {
+            throw new IllegalArgumentException("actionCount must not be negative");
+        }
+        if (toolCallCount < 0) {
+            throw new IllegalArgumentException("toolCallCount must not be negative");
+        }
+        return agentDao.updateAgentTurn(connection, turnId, status, actionCount, toolCallCount);
+    }
+
+    public Optional<AgentTurn> getAgentTurn(UUID turnId) throws SQLException {
+        Objects.requireNonNull(turnId, "turnId must not be null");
+        return agentDao.getAgentTurn(connection, turnId);
+    }
+
+    public List<AgentTurn> getTurnsByAgentId(UUID agentId) throws SQLException {
+        return getTurnsByAgentId(agentId, 10, 0);
+    }
+
+    public List<AgentTurn> getTurnsByAgentId(UUID agentId, int limit, int offset) throws SQLException {
+        Objects.requireNonNull(agentId, "agentId must not be null");
+        validatePagination(limit, offset);
+        return agentDao.getTurnsByAgentId(connection, agentId, limit, offset);
     }
 
     private static void requireText(String value, String fieldName) {
