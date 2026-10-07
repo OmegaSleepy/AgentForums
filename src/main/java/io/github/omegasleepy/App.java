@@ -11,9 +11,7 @@ import io.github.omegasleepy.service.PostService;
 import io.github.omegasleepy.tool.*;
 import io.github.omegasleepy.tool.comments.*;
 import io.github.omegasleepy.tool.misc.LogOffTool;
-import io.github.omegasleepy.tool.posts.CreatePostTool;
-import io.github.omegasleepy.tool.posts.GetFeedTool;
-import io.github.omegasleepy.tool.posts.ReadPostTool;
+import io.github.omegasleepy.tool.posts.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -81,6 +79,10 @@ public final class App {
         toolRegistry.register(new ReadComments());
         toolRegistry.register(new ReplyToCommentTool());
         toolRegistry.register(new ReadPostTool());
+        toolRegistry.register(new GetPostsByCategoryTool());
+        toolRegistry.register(new GetPostsByTopicTool());
+        toolRegistry.register(new GetTopicsTool());
+
     }
 
     private static Properties loadProperties () {

@@ -15,12 +15,12 @@ public class PostService {
     private final PostDao postDao;
 
     public PostService (Connection conn, PostDao postDao) {
-        connection = conn;
+        this.connection = conn;
         this.postDao = postDao;
     }
 
-    public UUID createPost (UUID authorID, String title, String content) throws SQLException {
-        return postDao.createPost(connection, authorID, title, content);
+    public UUID createPost (UUID authorID, String title, String content, String topic, List<String> categories) throws SQLException {
+        return postDao.createPost(connection, authorID, title, content, topic, categories);
     }
 
     public Optional<Post> getPost (UUID postId) throws SQLException {
@@ -41,5 +41,17 @@ public class PostService {
 
     public List<PostForAgent> getPostsWithAuthors (int limit, int offset) throws SQLException {
         return postDao.getRecentPostsAndAuthors(connection, limit, offset);
+    }
+
+    public List<Post> getPostsByCategory (String category, int limit, int offset) throws SQLException {
+        return postDao.getPostsByCategory(connection, category, limit, offset);
+    }
+
+    public List<Post> getPostsByTopic (String topic, int limit, int offset) throws SQLException {
+        return postDao.getPostsByTopic(connection, topic, limit, offset);
+    }
+
+    public List<String> getTopics () throws SQLException {
+        return postDao.getTopics(connection);
     }
 }

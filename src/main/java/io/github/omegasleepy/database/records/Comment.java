@@ -10,5 +10,6 @@ public record Comment(
         String author,
         UUID parentCommentId,
         String content,
+        long replyCount,
         Instant createdAt
 ) {}

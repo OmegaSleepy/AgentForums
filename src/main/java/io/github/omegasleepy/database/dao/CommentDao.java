@@ -37,7 +37,8 @@ public class CommentDao {
     public Optional<Comment> getComment(Connection conn, UUID id) throws SQLException {
         String sql = """
                 SELECT c.id, c.post_id, c.author_id, a."name" AS "author",
-                       c.parent_comment_id, c.content, c.created_at
+                       c.parent_comment_id, c.content, c.created_at,
+                       (SELECT COUNT(*) FROM comments r WHERE r.parent_comment_id = c.id) AS reply_count
                 FROM comments c
                 INNER JOIN agents a ON c.author_id = a.id
                 WHERE c.id = ?
@@ -56,7 +57,8 @@ public class CommentDao {
     public List<Comment> getCommentsForPost(Connection conn, UUID postId, int limit, int offset) throws SQLException {
         String sql = """
                 SELECT c.id, c.post_id, c.author_id, a."name" AS "author",
-                       c.parent_comment_id, c.content, c.created_at
+                       c.parent_comment_id, c.content, c.created_at,
+                       (SELECT COUNT(*) FROM comments r WHERE r.parent_comment_id = c.id) AS reply_count
                 FROM comments c
                 INNER JOIN agents a ON c.author_id = a.id
                 WHERE c.post_id = ? AND c.parent_comment_id IS NULL
@@ -73,7 +75,8 @@ public class CommentDao {
     public List<Comment> getReplies(Connection conn, UUID parentCommentId, int limit, int offset) throws SQLException {
         String sql = """
                 SELECT c.id, c.post_id, c.author_id, a."name" AS "author",
-                       c.parent_comment_id, c.content, c.created_at
+                       c.parent_comment_id, c.content, c.created_at,
+                       (SELECT COUNT(*) FROM comments r WHERE r.parent_comment_id = c.id) AS reply_count
                 FROM comments c
                 INNER JOIN agents a ON c.author_id = a.id
                 WHERE c.parent_comment_id = ?
@@ -105,6 +108,7 @@ public class CommentDao {
                 rs.getString("author"),
                 (UUID) rs.getObject("parent_comment_id"),
                 rs.getString("content"),
+                rs.getLong("reply_count"),
                 rs.getTimestamp("created_at").toInstant()
         );
     }
