@@ -1,9 +1,10 @@
-package io.github.omegasleepy.tool;
+package io.github.omegasleepy.tool.misc;
 
 import com.google.gson.JsonObject;
 import io.github.omegasleepy.openrouter.records.FunctionDefinition;
 import io.github.omegasleepy.openrouter.records.JsonSchema;
 import io.github.omegasleepy.openrouter.records.Tool;
+import io.github.omegasleepy.tool.AgentTool;
 
 import java.util.Map;
 import java.util.List;
